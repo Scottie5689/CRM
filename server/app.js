@@ -12,6 +12,13 @@ export const app = express();
 app.set('trust proxy', 'loopback');
 app.disable('x-powered-by');
 
+// Private app: ask search engines and AI crawlers not to index, follow or reuse anything,
+// including the public testimonial pages and API responses.
+app.use((req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai');
+  next();
+});
+
 const api = express.Router();
 api.use(express.json({ limit: '5mb' }));
 

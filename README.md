@@ -1,4 +1,4 @@
-# Freelance CRM
+# CRM
 
 A small CRM for tracking leads, companies and contacts. Svelte 5 frontend, Express API, SQLite database (Node's built-in `node:sqlite`, no native modules).
 

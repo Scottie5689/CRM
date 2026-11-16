@@ -71,7 +71,7 @@ jobs:
         # Passenger's tmp/ and any .htaccess cPanel writes stay put.
         run: |
           rsync -az --delete \
-            --exclude node_modules --exclude tmp --exclude .htaccess \
+            --exclude node_modules --exclude tmp --exclude .htaccess --exclude data \
             release/ crm:crm-app/
 
       - name: Install dependencies and restart

@@ -134,13 +134,13 @@ export async function submit(token, { rating, testimonial }) {
     throw err;
   }
 
-  // Let the freelancer know (best effort).
+  // Let the account owner know (best effort).
   sendMail({
     to: r.user_email,
     subject: `New testimonial from ${r.first_name}: ${'★'.repeat(n)}${'☆'.repeat(5 - n)}`,
     text: `${r.first_name} left you a ${n}-star testimonial:\n\n"${text}"\n\nIt has been saved to their contact in your CRM.`,
     html: `<p>${esc(r.first_name)} left you a <b>${n}-star</b> testimonial:</p><blockquote style="border-left:3px solid #4f46e5;margin:0;padding:4px 12px">${esc(text).replace(/\n/g, '<br>')}</blockquote><p>It has been saved to their contact in your CRM.</p>`,
-    fromName: 'Freelance CRM'
+    fromName: 'CRM'
   }).catch((err) => console.error('Notification email failed:', err.message));
 
   return { ok: true };

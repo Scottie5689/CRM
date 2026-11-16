@@ -43,7 +43,7 @@
 {:else}
 <div class="layout">
   <aside class="sidebar">
-    <a class="brand" href="#/">Freelance<span>CRM</span></a>
+    <a class="brand" href="#/"><span>CRM</span></a>
     <nav>
       {#each nav as item (item.id)}
         <a href="#/{item.id}" class:active={section === item.id} aria-current={section === item.id ? 'page' : undefined}>

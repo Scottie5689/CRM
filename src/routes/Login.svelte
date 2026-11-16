@@ -23,7 +23,7 @@
 
 <div class="wrap">
   <form class="card" onsubmit={submit}>
-    <div class="brand">Freelance<span>CRM</span></div>
+    <div class="brand"><span>CRM</span></div>
     <h1>Sign in</h1>
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <label>
