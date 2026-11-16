@@ -26,6 +26,7 @@ jobs:
         with:
           name: release
           path: |
+            app.js
             dist
             server
             shared
