@@ -1,0 +1,89 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once; queue the newer one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            dist
+            server
+            shared
+            package.json
+            package-lock.json
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://crm.scottv.tech
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host crm
+            HostName ${{ secrets.DEPLOY_HOST }}
+            Port ${{ secrets.DEPLOY_PORT || 22 }}
+            User ${{ secrets.DEPLOY_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+          CFG
+
+      - name: Upload release
+        # Excluded paths are also protected from --delete: the server's node_modules,
+        # Passenger's tmp/ and any .htaccess cPanel writes stay put.
+        run: |
+          rsync -az --delete \
+            --exclude node_modules --exclude tmp --exclude .htaccess \
+            release/ crm:crm-app/
+
+      - name: Install dependencies and restart
+        run: |
+          ssh crm 'set -e
+            export PATH="/opt/cpanel/ea-nodejs22/bin:$PATH"
+            cd ~/crm-app
+            node --version
+            npm ci --omit=dev --no-audit --no-fund
+            mkdir -p tmp && touch tmp/restart.txt'
+
+      - name: Check public URL
+        # Passenger starts the app on the first request, so allow a few tries.
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://crm.scottv.tech/ || true)
+            echo "Attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 3
+          done
+          exit 1
