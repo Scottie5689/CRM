@@ -45,6 +45,11 @@ jobs:
           name: release
           path: release
 
+      - name: Show runner IP
+        # Useful when the server firewall (CSF/cPHulk) blocks a deploy: `csf -g <ip>`.
+        run: |
+          echo "Runner public IP: $(curl -fsS https://api.ipify.org || echo unknown)"
+
       - name: Configure SSH
         run: |
           install -m 700 -d ~/.ssh
