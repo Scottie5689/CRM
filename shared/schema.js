@@ -48,8 +48,20 @@ export const SCHEMA = {
     { key: 'source', column: 'source', label: 'Source', type: 'text' },
     { key: 'followUp', column: 'follow_up', label: 'Next follow-up', type: 'date' },
     { key: 'notes', column: 'notes', label: 'Notes', type: 'textarea' }
+  ],
+
+  // Activity log on the contact page. Deleting a contact deletes its activity.
+  activities: [
+    { key: 'contactId', column: 'contact_id', label: 'Contact', type: 'ref', ref: 'contacts', required: true },
+    { key: 'type', column: 'type', label: 'Type', type: 'select', default: 'Call',
+      options: ['Call', 'Email', 'Meeting', 'Message', 'Note', 'Testimonial'] },
+    { key: 'date', column: 'date', label: 'Date', type: 'date', required: true },
+    { key: 'notes', column: 'notes', label: 'What happened', type: 'textarea', maxLength: 5000 }
   ]
 };
+
+// Collections in the order they must be created so links between records resolve.
+export const COLLECTIONS = ['companies', 'contacts', 'leads', 'activities'];
 
 // Sections on the contact page, in display order.
 export const CONTACT_SECTIONS = [

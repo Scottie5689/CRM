@@ -1,6 +1,6 @@
 // Maps the frontend's camelCase records to SQLite rows, scoped per user.
 import { db, transaction } from './db.js';
-import { SCHEMA } from '../shared/schema.js';
+import { SCHEMA, COLLECTIONS } from '../shared/schema.js';
 
 export const TABLES = SCHEMA;
 
@@ -109,9 +109,9 @@ export function replaceAll(userId, data) {
     if (data[c] !== undefined && !Array.isArray(data[c])) throw new ValidationError(`"${c}" must be a list`);
   }
   transaction(() => {
-    for (const c of ['leads', 'contacts', 'companies']) db.prepare(`DELETE FROM ${c} WHERE user_id = ?`).run(userId);
+    for (const c of [...COLLECTIONS].reverse()) db.prepare(`DELETE FROM ${c} WHERE user_id = ?`).run(userId);
     // Order matters so links between imported records resolve.
-    for (const c of ['companies', 'contacts', 'leads']) {
+    for (const c of COLLECTIONS) {
       for (const record of data[c] ?? []) {
         const id = typeof record.id === 'string' && record.id ? record.id : crypto.randomUUID();
         if (!upsert(c, id, record, userId)) throw new ValidationError(`Record ${id} conflicts with existing data`);

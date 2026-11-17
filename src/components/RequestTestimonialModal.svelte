@@ -2,6 +2,8 @@
   import Modal from './Modal.svelte';
   import { api } from '../lib/api.js';
   import { auth } from '../lib/auth.svelte.js';
+  import { db } from '../lib/db.svelte.js';
+  import { today } from '../lib/format.js';
 
   let { contact, hasExisting = false, onclose, onsent } = $props();
 
@@ -37,8 +39,14 @@ ${name}`.trimEnd();
     busy = true;
     error = '';
     try {
-      result = await api('POST', `/api/contacts/${contact.id}/testimonial-request`, { senderName, subject, message });
+      result = await api('POST', `/api/contacts/${contact.id}/testimonial-request`, {
+        senderName,
+        subject,
+        message,
+        localDate: today()
+      });
       if (auth.user) auth.user.displayName = senderName.trim();
+      if (result.activity) db.activities.push(result.activity); // show it in the log right away
       onsent?.(result.request);
     } catch (err) {
       error = err.message;

@@ -126,7 +126,7 @@ api.get('/contacts/:id/testimonial-request', (req, res) => {
 });
 
 api.post('/contacts/:id/testimonial-request', async (req, res) => {
-  const { senderName, subject, message } = req.body ?? {};
+  const { senderName, subject, message, localDate } = req.body ?? {};
   const clean = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
   const fields = {
     senderName: clean(senderName, LIMITS.senderName),
@@ -141,9 +141,15 @@ api.post('/contacts/:id/testimonial-request', async (req, res) => {
   }
   // Public link points at this app. Set APP_URL in production (e.g. https://crm.example.com).
   const baseUrl = (process.env.APP_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-  const result = await createRequest({ user: req.user, contactId: req.params.id, baseUrl, ...fields });
+  const result = await createRequest({ user: req.user, contactId: req.params.id, baseUrl, localDate, ...fields });
   if (result.error) return res.status(result.status).json({ error: result.error });
-  res.json({ delivered: result.delivered, link: result.link, to: result.to, request: result.request });
+  res.json({
+    delivered: result.delivered,
+    link: result.link,
+    to: result.to,
+    request: result.request,
+    activity: result.activity
+  });
 });
 
 // --- Contact photos ---

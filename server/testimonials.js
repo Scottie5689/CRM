@@ -1,10 +1,24 @@
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes, createHash, randomUUID } from 'node:crypto';
 import { db } from './db.js';
 import { sendMail } from './mailer.js';
 import { parseImage, saveHeadshot } from './headshots.js';
-import { ValidationError } from './records.js';
+import { ValidationError, upsert } from './records.js';
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
+
+/** The browser's local date (YYYY-MM-DD) if it's plausible (within a day or so of now), else today in UTC. */
+function activityDate(localDate) {
+  const now = Date.now();
+  if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    const t = Date.parse(localDate + 'T12:00:00Z');
+    if (Math.abs(t - now) < 2 * 864e5) return localDate;
+  }
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+/** Add a "Testimonial" entry to the contact's activity log. Returns the saved activity. */
+const logActivity = (userId, contactId, date, notes) =>
+  upsert('activities', randomUUID(), { contactId, type: 'Testimonial', date, notes }, userId);
 const LINK_DAYS = 30;
 export const LIMITS = { subject: 200, message: 5000, senderName: 100, testimonial: 5000 };
 
@@ -47,7 +61,7 @@ function emailHtml({ message, link, senderName }) {
 }
 
 /** Create a request link for a contact and email it. */
-export async function createRequest({ user, contactId, senderName, subject, message, baseUrl }) {
+export async function createRequest({ user, contactId, senderName, subject, message, baseUrl, localDate }) {
   const contact = db.prepare('SELECT * FROM contacts WHERE id = ? AND user_id = ?').get(contactId, user.id);
   if (!contact) return { error: 'Contact not found', status: 404 };
   if (!contact.email) return { error: 'This contact has no email address', status: 400 };
@@ -77,7 +91,16 @@ export async function createRequest({ user, contactId, senderName, subject, mess
     replyTo: user.email
   });
 
-  return { ...result, link, to: contact.email, request: latestRequest(contactId, user.id) };
+  const activity = logActivity(
+    user.id,
+    contactId,
+    activityDate(localDate),
+    result.delivered
+      ? `Requested a testimonial by email (sent to ${contact.email}).`
+      : `Created a testimonial request link. Email isn't set up, so it wasn't sent automatically.`
+  );
+
+  return { ...result, link, to: contact.email, request: latestRequest(contactId, user.id), activity };
 }
 
 function findByToken(token) {
@@ -108,7 +131,7 @@ export function publicView(token) {
   return { state, firstName: r.first_name, senderName: r.sender_name };
 }
 
-export async function submit(token, { rating, testimonial, consentName, consentCompany, headshot }) {
+export async function submit(token, { rating, testimonial, consentName, consentCompany, headshot, localDate }) {
   const r = findByToken(token);
   const state = linkState(r);
   if (state !== 'open') return { error: state === 'submitted' ? 'This link has already been used.' : 'This link is no longer valid.', status: 410 };
@@ -129,6 +152,10 @@ export async function submit(token, { rating, testimonial, consentName, consentC
     }
   }
 
+  const yesNo = (v) => (v ? 'yes' : 'no');
+  const permissions = `Show their name: ${yesNo(showName)} · Show their company: ${yesNo(showCompany)} · Photo: ${photo ? 'added' : 'none'}`;
+  const excerpt = text.length > 200 ? `${text.slice(0, 200).trimEnd()}…` : text;
+
   const now = new Date().toISOString();
   db.exec('BEGIN');
   try {
@@ -142,6 +169,12 @@ export async function submit(token, { rating, testimonial, consentName, consentC
        WHERE id = ? AND user_id = ?`
     ).run(text, n, showName, showCompany, now, r.contact_id, r.user_id);
     if (photo) saveHeadshot(r.contact_id, r.user_id, photo);
+    logActivity(
+      r.user_id,
+      r.contact_id,
+      activityDate(localDate),
+      `Received a ${n}-star testimonial: "${excerpt}"\n${permissions}`
+    );
     db.exec('COMMIT');
   } catch (err) {
     db.exec('ROLLBACK');
@@ -150,8 +183,6 @@ export async function submit(token, { rating, testimonial, consentName, consentC
   }
 
   // Let the account owner know (best effort).
-  const yesNo = (v) => (v ? 'yes' : 'no');
-  const permissions = `Show their name: ${yesNo(showName)} · Show their company: ${yesNo(showCompany)} · Photo: ${photo ? 'added' : 'none'}`;
   sendMail({
     to: r.user_email,
     subject: `New testimonial from ${r.first_name}: ${'★'.repeat(n)}${'☆'.repeat(5 - n)}`,

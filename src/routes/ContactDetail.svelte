@@ -8,6 +8,7 @@
   import StageBadge from '../components/StageBadge.svelte';
   import LeadForm from '../components/LeadForm.svelte';
   import RequestTestimonialModal from '../components/RequestTestimonialModal.svelte';
+  import ActivityLog from '../components/ActivityLog.svelte';
   import { api } from '../lib/api.js';
   import { toJpegDataUrl } from '../lib/image.js';
 
@@ -280,6 +281,8 @@
             {#if form.phone}<a href="tel:{form.phone}">☏ {form.phone}</a>{/if}
           </section>
         {/if}
+
+        <ActivityLog contactId={form.id} />
 
         {#if form.createdAt}
           <p class="meta">

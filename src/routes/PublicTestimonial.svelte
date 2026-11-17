@@ -51,7 +51,8 @@
         testimonial,
         consentName,
         consentCompany,
-        headshot: photo || undefined
+        headshot: photo || undefined,
+        localDate: new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, for the activity log
       });
       done = true;
     } catch (err) {

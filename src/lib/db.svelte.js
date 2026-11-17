@@ -1,6 +1,7 @@
 // Central data store: an in-memory copy of the signed-in user's data, kept in
 // sync with the SQLite database through the API.
 import { api } from './api.js';
+import { COLLECTIONS } from '../../shared/schema.js';
 
 export const STAGES = [
   { id: 'new', label: 'New', color: '#64748b' },
@@ -25,7 +26,7 @@ function daysFromToday(n) {
 }
 
 function empty() {
-  return { companies: [], contacts: [], leads: [] };
+  return Object.fromEntries(COLLECTIONS.map((c) => [c, []]));
 }
 
 export function sampleData() {
@@ -50,6 +51,11 @@ export function sampleData() {
       { id: uid(), title: 'Shopify store setup', companyId: bloom, contactId: maria, value: 4000, stage: 'contacted', source: 'Meetup', followUp: daysFromToday(5), notes: '', createdAt: t },
       { id: uid(), title: 'MVP landing page', companyId: '', contactId: tom, value: 2500, stage: 'new', source: 'Referral', followUp: '', notes: '', createdAt: t },
       { id: uid(), title: 'Q2 illustration package', companyId: acme, contactId: jane, value: 3200, stage: 'won', source: 'Existing client', followUp: '', notes: 'Invoiced.', createdAt: t }
+    ],
+    activities: [
+      { id: uid(), contactId: raj, type: 'Meeting', date: daysFromToday(-6), notes: 'Discovery call about the website redesign. Main goal: faster checkout.', createdAt: t },
+      { id: uid(), contactId: raj, type: 'Email', date: daysFromToday(-2), notes: 'Sent the proposal and timeline.', createdAt: t },
+      { id: uid(), contactId: jane, type: 'Call', date: daysFromToday(-1), notes: 'Talked through phase 2 scope; she will confirm budget next week.', createdAt: t }
     ]
   };
 }
@@ -70,7 +76,7 @@ export function flash(message) {
 }
 
 function setLocal(data) {
-  for (const k of ['companies', 'contacts', 'leads']) db[k] = data[k] ?? [];
+  for (const k of COLLECTIONS) db[k] = data[k] ?? [];
 }
 
 export const resetLocal = () => setLocal(empty());
@@ -128,13 +134,14 @@ export function remove(collection, id) {
   }
   if (collection === 'contacts') {
     for (const l of db.leads) if (l.contactId === id) l.contactId = '';
+    db.activities = db.activities.filter((a) => a.contactId !== id); // deleted with the contact
   }
   sync(api('DELETE', `/api/${collection}/${id}`));
 }
 
 /** Replace everything on the server (backup import, sample data, reset). */
 export async function replaceAll(data) {
-  for (const k of ['companies', 'contacts', 'leads']) {
+  for (const k of COLLECTIONS) {
     if (data[k] !== undefined && !Array.isArray(data[k])) throw new Error(`Invalid file: "${k}" must be a list`);
   }
   setLocal(await api('POST', '/api/import', { ...empty(), ...data }));

@@ -77,6 +77,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS testimonial_requests_contact ON testimonial_requests(contact_id);
 
+  -- Activity log. Other columns (type, date, notes) are added from shared/schema.js below.
+  CREATE TABLE IF NOT EXISTS activities (
+    id         TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    contact_id TEXT NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  );
+  CREATE INDEX IF NOT EXISTS activities_user    ON activities(user_id);
+  CREATE INDEX IF NOT EXISTS activities_contact ON activities(contact_id);
+
   -- One photo per contact. No foreign key on contact_id on purpose: a backup import deletes
   -- and re-adds contacts with the same ids, and the photos should survive that. Orphans are
   -- removed by pruneHeadshots() in records.js.
