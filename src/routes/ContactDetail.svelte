@@ -9,6 +9,7 @@
   import LeadForm from '../components/LeadForm.svelte';
   import RequestTestimonialModal from '../components/RequestTestimonialModal.svelte';
   import { api } from '../lib/api.js';
+  import { toJpegDataUrl } from '../lib/image.js';
 
   let { id } = $props();
 
@@ -84,6 +85,41 @@
     return `Requested ${day(request.sentAt)} · waiting for a reply`;
   });
 
+  // --- Headshot (saved straight away, separate from the form's Save button) ---
+  let headshotBusy = $state(false);
+  let headshotSrc = $derived(
+    form.id && live?.headshotAt ? `/api/contacts/${form.id}/headshot?v=${encodeURIComponent(live.headshotAt)}` : ''
+  );
+  let headshotFile = $derived(`${(fullName(form) || 'contact').replace(/[^\w-]+/g, '-')}-headshot.jpg`);
+
+  async function uploadHeadshot(e) {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = '';
+    if (!file || !form.id) return;
+    headshotBusy = true;
+    try {
+      const image = await toJpegDataUrl(file);
+      const r = await api('PUT', `/api/contacts/${form.id}/headshot`, { image });
+      if (live) live.headshotAt = r.headshotAt;
+      flash('Photo saved');
+    } catch (err) {
+      if (err.status !== 401) flash(`Couldn't save the photo: ${err.message}`);
+    } finally {
+      headshotBusy = false;
+    }
+  }
+
+  async function removeHeadshot() {
+    if (!confirm('Remove this photo?')) return;
+    try {
+      await api('DELETE', `/api/contacts/${form.id}/headshot`);
+      if (live) live.headshotAt = '';
+      flash('Photo removed');
+    } catch (err) {
+      if (err.status !== 401) flash(`Couldn't remove the photo: ${err.message}`);
+    }
+  }
+
   let saving = $state(false);
 
   async function submit(e) {
@@ -135,7 +171,7 @@
       <div class="title">
         <h1>{fullName(form) || 'New contact'}</h1>
         <p class="subtitle">
-          {form.role}{#if form.role && company} at {/if}{#if company}<a href="#/companies/{company.id}">{company.name}</a>{/if}
+          {form.role}{#if form.role && company}{' at '}{/if}{#if company}<a href="#/companies/{company.id}">{company.name}</a>{/if}
         </p>
       </div>
       <div class="actions">
@@ -177,6 +213,32 @@
                   <Field def={f} bind:value={form[f.key]} />
                 {/each}
               </div>
+              {#if s.id === 'testimonial'}
+                <div class="headshot">
+                  <span class="photo-label">Photo</span>
+                  {#if !form.id}
+                    <p class="empty">Save the contact to add a photo.</p>
+                  {:else}
+                    <div class="photo-row">
+                      {#if headshotSrc}
+                        <img src={headshotSrc} alt="Headshot of {fullName(form)}" />
+                      {:else}
+                        <div class="no-photo" aria-hidden="true">☺</div>
+                      {/if}
+                      <div class="photo-actions">
+                        <label class="button small">
+                          {headshotBusy ? 'Uploading…' : headshotSrc ? 'Replace' : 'Upload photo'}
+                          <input type="file" accept="image/*" class="sr-only" disabled={headshotBusy} onchange={uploadHeadshot} />
+                        </label>
+                        {#if headshotSrc}
+                          <a class="button small" href={headshotSrc} download={headshotFile}>Download</a>
+                          <button type="button" class="ghost small danger" onclick={removeHeadshot}>Remove</button>
+                        {/if}
+                      </div>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
             </section>
           {/if}
         {/each}
@@ -322,6 +384,48 @@
   }
   .card > .section-head {
     margin-bottom: 8px;
+  }
+  .headshot {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .photo-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .photo-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .photo-row img,
+  .no-photo {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    flex: none;
+  }
+  .photo-row img {
+    object-fit: cover;
+  }
+  .no-photo {
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+  .photo-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
   }
   .quick {
     display: flex;

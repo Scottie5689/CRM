@@ -3,6 +3,7 @@
   import { api } from '../lib/api.js';
   import Rating from '../components/Rating.svelte';
   import Footer from '../components/Footer.svelte';
+  import { toJpegDataUrl } from '../lib/image.js';
 
   let { token } = $props();
 
@@ -10,6 +11,25 @@
   let loadError = $state('');
   let rating = $state(0);
   let testimonial = $state('');
+  let consentName = $state(false);
+  let consentCompany = $state(false);
+  let photo = $state(''); // JPEG data URL
+  let photoBusy = $state(false);
+
+  async function pickPhoto(e) {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = '';
+    if (!file) return;
+    error = '';
+    photoBusy = true;
+    try {
+      photo = await toJpegDataUrl(file);
+    } catch (err) {
+      error = err.message;
+    } finally {
+      photoBusy = false;
+    }
+  }
   let busy = $state(false);
   let error = $state('');
   let done = $state(false);
@@ -26,7 +46,13 @@
     if (!testimonial.trim()) return (error = 'Please write a few words.');
     busy = true;
     try {
-      await api('POST', `/api/public/testimonials/${encodeURIComponent(token)}`, { rating, testimonial });
+      await api('POST', `/api/public/testimonials/${encodeURIComponent(token)}`, {
+        rating,
+        testimonial,
+        consentName,
+        consentCompany,
+        headshot: photo || undefined
+      });
       done = true;
     } catch (err) {
       error = err.message;
@@ -41,7 +67,8 @@
 <svelte:head><title>Share your feedback</title></svelte:head>
 
 <div class="wrap">
-  <div class="card panel">
+  <div class="form-card panel">
+    <div class="wordmark page-brand">ScottV<span class="tld">.tech</span></div>
     {#if loadError}
       <h1>Something went wrong</h1>
       <p class="lead">{loadError}</p>
@@ -49,7 +76,7 @@
       <p class="lead">Loading…</p>
     {:else if done}
       <div class="big" aria-hidden="true">🎉</div>
-      <h1>Thank you, {view.firstName}!</h1>
+      <h1>Thank you, <span class="hl">{view.firstName}</span>!</h1>
       <p class="lead">Your feedback has been sent to {view.senderName}. It really means a lot.</p>
       <p class="muted">You can close this page now.</p>
     {:else if view.state === 'submitted'}
@@ -63,7 +90,7 @@
       <p class="lead">This feedback link isn't valid any more. It may have been replaced by a newer one.</p>
     {:else}
       <form onsubmit={submit}>
-        <h1>Hi {view.firstName} 👋</h1>
+        <h1>Hi <span class="hl">{view.firstName}</span> 👋</h1>
         <p class="lead">
           {view.senderName} would love to hear how it went working together. It only takes a minute.
         </p>
@@ -83,10 +110,39 @@
           ></textarea>
         </label>
 
+        <fieldset class="block">
+          <legend class="label">Can {view.senderName} share this in their marketing?</legend>
+          <label class="check">
+            <input type="checkbox" bind:checked={consentName} />
+            <span>Yes, show my name with my testimonial</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" bind:checked={consentCompany} />
+            <span>Yes, show my company name</span>
+          </label>
+          <p class="muted hint">Leave these unticked to stay anonymous.</p>
+        </fieldset>
+
+        <div class="block">
+          <span class="label">Your photo (optional)</span>
+          {#if photo}
+            <div class="photo">
+              <img src={photo} alt="Your chosen headshot" />
+              <button type="button" class="ghost" onclick={() => (photo = '')}>Remove photo</button>
+            </div>
+          {:else}
+            <label class="button">
+              {photoBusy ? 'Preparing…' : 'Choose a photo'}
+              <input type="file" accept="image/*" class="sr-only" disabled={photoBusy} onchange={pickPhoto} />
+            </label>
+          {/if}
+          <p class="muted hint">A headshot to show alongside your testimonial.</p>
+        </div>
+
         {#if error}<p class="error" role="alert">{error}</p>{/if}
 
-        <button class="primary submit" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send feedback'}</button>
-        <p class="muted fine">Your rating and words go only to {view.senderName}.</p>
+        <button class="primary submit" type="submit" disabled={busy || photoBusy}>{busy ? 'Sending…' : 'Send feedback'}</button>
+        <p class="muted fine">Your feedback goes only to {view.senderName}, who will use it as you've chosen above.</p>
       </form>
     {/if}
   </div>
@@ -112,15 +168,25 @@
       padding: 22px 18px;
     }
   }
-  h1 {
-    font-size: 1.5rem;
-    margin: 0 0 8px;
+  .page-brand {
+    font-size: 20px;
+    margin-bottom: 28px;
   }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 12px;
+  }
+  /* Brand "accent highlight": one red word per heading */
+  .hl {
+    color: var(--accent);
+  }
+  /* Brand "Lead": Geist 18px, 160% line height, muted */
   .lead {
-    font-size: 1.05rem;
-    color: var(--text);
-    margin: 0 0 24px;
-    line-height: 1.5;
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    line-height: 1.6;
   }
   .block {
     display: block;
@@ -128,10 +194,9 @@
   }
   .label {
     display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 12px;
     color: var(--muted);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
   textarea {
     font-size: 1rem;
@@ -144,8 +209,8 @@
   }
   .submit {
     width: 100%;
-    padding: 12px;
-    font-size: 1rem;
+    padding: 15px 16px;
+    font-size: 16px;
   }
   .submit:disabled {
     opacity: 0.6;
@@ -165,6 +230,38 @@
     font-size: 0.8rem;
     text-align: center;
     margin: 12px 0 0;
+  }
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 20px;
+    min-width: 0;
+  }
+  legend {
+    padding: 0;
+  }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 8px 0;
+    cursor: pointer;
+  }
+  .hint {
+    font-size: 0.8rem;
+    margin: 6px 0 0;
+  }
+  .photo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .photo img {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1px solid var(--border);
   }
   .big {
     font-size: 2.5rem;

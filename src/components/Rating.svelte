@@ -56,7 +56,7 @@
     cursor: pointer;
     line-height: 1;
     padding: 0 2px;
-    color: var(--border);
+    color: var(--star-off);
     transition: color 0.1s, transform 0.1s;
   }
   .star.on {

@@ -1,6 +1,8 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { db } from './db.js';
 import { sendMail } from './mailer.js';
+import { parseImage, saveHeadshot } from './headshots.js';
+import { ValidationError } from './records.js';
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 const LINK_DAYS = 30;
@@ -32,11 +34,11 @@ function emailHtml({ message, link, senderName }) {
     <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;border:1px solid #e2e5ea" cellspacing="0" cellpadding="0">
       <tr><td style="padding:32px 32px 8px;font-size:16px;line-height:1.55">${paragraphs}</td></tr>
       <tr><td align="center" style="padding:8px 32px 28px">
-        <a href="${esc(link)}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:12px 24px;border-radius:8px">Share your feedback</a>
+        <a href="${esc(link)}" style="display:inline-block;background:#ff3b30;color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:12px 24px;border-radius:8px">Share your feedback</a>
         <p style="margin:12px 0 0;font-size:13px;color:#6b7280">It takes about a minute — just a star rating and a few words.</p>
       </td></tr>
       <tr><td style="padding:16px 32px 28px;border-top:1px solid #e2e5ea;font-size:12px;color:#6b7280;line-height:1.5">
-        Button not working? Copy this link into your browser:<br><a href="${esc(link)}" style="color:#4f46e5;word-break:break-all">${esc(link)}</a><br><br>
+        Button not working? Copy this link into your browser:<br><a href="${esc(link)}" style="color:#ff3b30;word-break:break-all">${esc(link)}</a><br><br>
         Sent by ${esc(senderName)}. The link is personal to you and expires in ${LINK_DAYS} days.
       </td></tr>
     </table>
@@ -106,7 +108,7 @@ export function publicView(token) {
   return { state, firstName: r.first_name, senderName: r.sender_name };
 }
 
-export async function submit(token, { rating, testimonial }) {
+export async function submit(token, { rating, testimonial, consentName, consentCompany, headshot }) {
   const r = findByToken(token);
   const state = linkState(r);
   if (state !== 'open') return { error: state === 'submitted' ? 'This link has already been used.' : 'This link is no longer valid.', status: 410 };
@@ -115,6 +117,17 @@ export async function submit(token, { rating, testimonial }) {
   if (!(n >= 1 && n <= 5)) return { error: 'Please choose a rating from 1 to 5 stars.', status: 400 };
   const text = typeof testimonial === 'string' ? testimonial.trim().slice(0, LIMITS.testimonial) : '';
   if (!text) return { error: 'Please write a few words.', status: 400 };
+  const showName = consentName === true ? 1 : 0;
+  const showCompany = consentCompany === true ? 1 : 0;
+  let photo = null;
+  if (headshot) {
+    try {
+      photo = parseImage(headshot);
+    } catch (err) {
+      if (err instanceof ValidationError) return { error: err.message, status: 400 };
+      throw err;
+    }
+  }
 
   const now = new Date().toISOString();
   db.exec('BEGIN');
@@ -125,8 +138,10 @@ export async function submit(token, { rating, testimonial }) {
       .run(now, r.token_hash);
     if (used.changes === 0) throw Object.assign(new Error('used'), { used: true });
     db.prepare(
-      `UPDATE contacts SET testimonial = ?, testimonial_rating = ?, updated_at = ? WHERE id = ? AND user_id = ?`
-    ).run(text, n, now, r.contact_id, r.user_id);
+      `UPDATE contacts SET testimonial = ?, testimonial_rating = ?, consent_name = ?, consent_company = ?, updated_at = ?
+       WHERE id = ? AND user_id = ?`
+    ).run(text, n, showName, showCompany, now, r.contact_id, r.user_id);
+    if (photo) saveHeadshot(r.contact_id, r.user_id, photo);
     db.exec('COMMIT');
   } catch (err) {
     db.exec('ROLLBACK');
@@ -135,11 +150,13 @@ export async function submit(token, { rating, testimonial }) {
   }
 
   // Let the account owner know (best effort).
+  const yesNo = (v) => (v ? 'yes' : 'no');
+  const permissions = `Show their name: ${yesNo(showName)} · Show their company: ${yesNo(showCompany)} · Photo: ${photo ? 'added' : 'none'}`;
   sendMail({
     to: r.user_email,
     subject: `New testimonial from ${r.first_name}: ${'★'.repeat(n)}${'☆'.repeat(5 - n)}`,
-    text: `${r.first_name} left you a ${n}-star testimonial:\n\n"${text}"\n\nIt has been saved to their contact in your CRM.`,
-    html: `<p>${esc(r.first_name)} left you a <b>${n}-star</b> testimonial:</p><blockquote style="border-left:3px solid #4f46e5;margin:0;padding:4px 12px">${esc(text).replace(/\n/g, '<br>')}</blockquote><p>It has been saved to their contact in your CRM.</p>`,
+    text: `${r.first_name} left you a ${n}-star testimonial:\n\n"${text}"\n\n${permissions}\n\nIt has been saved to their contact in your CRM.`,
+    html: `<p>${esc(r.first_name)} left you a <b>${n}-star</b> testimonial:</p><blockquote style="border-left:3px solid #ff3b30;margin:0;padding:4px 12px">${esc(text).replace(/\n/g, '<br>')}</blockquote><p style="color:#6b7280;font-size:14px">${permissions}</p><p>It has been saved to their contact in your CRM.</p>`,
     fromName: 'CRM'
   }).catch((err) => console.error('Notification email failed:', err.message));
 

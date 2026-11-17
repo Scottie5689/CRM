@@ -7,6 +7,7 @@ import { db } from './db.js';
 import { TABLES, ValidationError, listAll, upsert, remove, replaceAll } from './records.js';
 import { LIMITS, createRequest, latestRequest, publicView, submit } from './testimonials.js';
 import { mailConfigured } from './mailer.js';
+import { parseImage, saveHeadshot, getHeadshot, deleteHeadshot } from './headshots.js';
 
 export const app = express();
 app.set('trust proxy', 'loopback');
@@ -63,10 +64,10 @@ api.post('/login', async (req, res) => {
   }
   const { email, password } = req.body ?? {};
   if (typeof email !== 'string' || typeof password !== 'string') {
-    return res.status(400).json({ error: 'Email and password are required' });
+    return res.status(400).json({ error: 'Username and password are required' });
   }
   const user = await authenticate(email, password);
-  if (!user) return res.status(401).json({ error: 'Incorrect email or password' });
+  if (!user) return res.status(401).json({ error: 'Incorrect username or password' });
 
   attempts.delete(req.ip);
   const { token, expires } = createSession(user.id);
@@ -143,6 +144,32 @@ api.post('/contacts/:id/testimonial-request', async (req, res) => {
   const result = await createRequest({ user: req.user, contactId: req.params.id, baseUrl, ...fields });
   if (result.error) return res.status(result.status).json({ error: result.error });
   res.json({ delivered: result.delivered, link: result.link, to: result.to, request: result.request });
+});
+
+// --- Contact photos ---
+api.get('/contacts/:id/headshot', (req, res) => {
+  const photo = getHeadshot(req.params.id, req.user.id);
+  if (!photo) return res.status(404).json({ error: 'No photo' });
+  res.set({
+    'Content-Type': photo.mime,
+    'Content-Length': photo.data.length,
+    // The app adds ?v=<updated time>, so a new photo gets a new URL.
+    'Cache-Control': 'private, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "default-src 'none'; sandbox"
+  });
+  res.end(photo.data);
+});
+
+api.put('/contacts/:id/headshot', (req, res) => {
+  const headshotAt = saveHeadshot(req.params.id, req.user.id, parseImage(req.body?.image));
+  if (!headshotAt) return res.status(404).json({ error: 'Contact not found' });
+  res.json({ headshotAt });
+});
+
+api.delete('/contacts/:id/headshot', (req, res) => {
+  deleteHeadshot(req.params.id, req.user.id);
+  res.status(204).end();
 });
 
 api.get('/data', (req, res) => res.json(listAll(req.user.id)));

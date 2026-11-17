@@ -77,6 +77,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS testimonial_requests_contact ON testimonial_requests(contact_id);
 
+  -- One photo per contact. No foreign key on contact_id on purpose: a backup import deletes
+  -- and re-adds contacts with the same ids, and the photos should survive that. Orphans are
+  -- removed by pruneHeadshots() in records.js.
+  CREATE TABLE IF NOT EXISTS headshots (
+    contact_id TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mime       TEXT NOT NULL,
+    data       BLOB NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS companies_user ON companies(user_id);
   CREATE INDEX IF NOT EXISTS contacts_user  ON contacts(user_id);
   CREATE INDEX IF NOT EXISTS leads_user     ON leads(user_id);
@@ -88,7 +99,7 @@ const userCols = new Set(db.prepare('PRAGMA table_info(users)').all().map((c) =>
 if (!userCols.has('display_name')) db.exec('ALTER TABLE users ADD COLUMN display_name TEXT');
 
 // Add any columns defined in shared/schema.js that the database doesn't have yet.
-const SQL_TYPE = { rating: 'INTEGER', number: 'REAL' };
+const SQL_TYPE = { rating: 'INTEGER', number: 'REAL', boolean: 'INTEGER' };
 for (const [table, fields] of Object.entries(SCHEMA)) {
   const have = new Set(db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name));
   for (const f of fields) {

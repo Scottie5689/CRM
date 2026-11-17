@@ -1,116 +1,167 @@
-:root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #eef0f4;
-  --border: #e2e5ea;
-  --text: #1a1d23;
-  --muted: #6b7280;
-  --accent: #4f46e5;
-  --accent-text: #ffffff;
-  --danger: #dc2626;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 20px 50px rgb(0 0 0 / 0.2);
-  /* Chart palette (validated for colour-blind separation) */
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #eda100;
-  --series-other: #8f8e89;
-  --star: #e09b00;
-  color-scheme: light dark;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
-}
+/* ScottV.tech brand system (Figma: Portfolio → Brand Guidelines v1.1).
+   Dark, plum-tinted base with a single red accent. Outfit (uppercase) for headings,
+   labels and actions; Geist for body copy and data. Depth comes from hairline borders
+   and soft red glows, not shadows. */
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/geist';
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --surface: #171a21;
-    --surface-2: #1f232c;
-    --border: #2a2f3a;
-    --text: #e6e8ec;
-    --muted: #8b93a3;
-    --accent: #818cf8;
-    --accent-text: #0f1115;
-    --danger: #f87171;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-other: #6f6e69;
-    --star: #f2b01e;
-  }
+:root {
+  /* Brand colors */
+  --bg: #0e0916; /* Background */
+  --surface: #1a1224; /* Surface: cards, forms, tiles */
+  --surface-2: #231830; /* Surface raised: input fields, hover */
+  --border: rgb(255 255 255 / 0.06); /* Hairline border */
+  --text: #ffffff; /* Text primary */
+  --muted: #9b8fa9; /* Text muted */
+  --accent: #ff3b30; /* CTAs, active nav, labels, highlights */
+  --accent-tint: rgb(255 59 48 / 0.12); /* Tag, eyebrow, badge & icon backgrounds */
+  --accent-border: rgb(255 59 48 / 0.2); /* Form container border */
+  --accent-text: #ffffff;
+  --danger: #ff3b30;
+
+  /* Type */
+  --font-display: 'Outfit Variable', 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Radius: 6 tag · 8 button/field · 10 link/icon · 16 card · 20 form/image · 100 badge */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow: none;
+  --shadow-lg: 0 24px 60px rgb(0 0 0 / 0.55); /* overlays only (modals, popovers, toasts) */
+
+  /* Chart palette (validated for colour-blind separation on dark backgrounds) */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-other: #6f6e69;
+  --star: #f2b01e;
+  --star-off: rgb(255 255 255 / 0.18); /* empty stars: visible on dark surfaces */
+
+  color-scheme: dark;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
+  background-color: var(--bg);
+  /* Soft red glow (brand "Background Glow"), very low opacity. */
+  background-image: radial-gradient(700px circle at 90% -10%, rgb(255 59 48 / 0.06), transparent 70%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* Headings: Outfit, uppercase */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+h1 { margin: 0; font-size: 2rem; font-weight: 800; }
+h2 { font-weight: 700; font-size: 1rem; letter-spacing: 0.02em; }
+
+/* Wordmark: Outfit Black, white "ScottV" + red ".tech". Never recolor. */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 24px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
+}
+.wordmark .tld { color: var(--accent); }
+a.wordmark:hover { text-decoration: none; }
+
+/* Hero badge: Outfit Bold 12px uppercase red on accent tint, pill */
+.badge-hero {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border-radius: 100px;
+  padding: 6px 12px;
+  line-height: 1.2;
+}
+
 /* Layout */
 .layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 232px 1fr;
   min-height: 100vh;
 }
 .sidebar {
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 20px 12px;
+  padding: 24px 14px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   position: sticky;
   top: 0;
   height: 100vh;
 }
 .brand {
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   padding: 0 10px;
-  letter-spacing: -0.01em;
 }
-.brand span { color: var(--accent); margin-left: 2px; }
 .brand:hover { text-decoration: none; }
 nav { display: flex; flex-direction: column; gap: 2px; }
 nav a {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: var(--radius);
   color: var(--text);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 nav a:hover { background: var(--surface-2); text-decoration: none; }
-nav a.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+/* Active nav: red text + 2px red underline, 4px gap */
+.nav-label { padding-bottom: 2px; border-bottom: 2px solid transparent; }
+nav a.active { color: var(--accent); }
+nav a.active .nav-label { border-bottom-color: var(--accent); }
 .icon-glyph { width: 18px; text-align: center; opacity: 0.8; }
 .pill {
   margin-left: auto;
-  background: var(--danger);
-  color: white;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-body);
   font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 999px;
+  font-weight: 500;
+  border-radius: 100px;
   padding: 1px 7px;
 }
 .sidebar-foot { margin-top: auto; }
 
 main {
-  padding: 28px 32px 48px;
+  padding: 32px 40px 48px;
   min-width: 0;
-  max-width: 1400px;
+  max-width: 1360px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -119,7 +170,7 @@ main {
   margin-top: auto;
   padding-top: 32px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 13px;
   color: var(--muted);
 }
 .site-foot a { color: inherit; }
@@ -132,15 +183,17 @@ main {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     gap: 8px;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
+  .brand { flex-direction: row; align-items: center; }
   nav { flex-direction: row; flex-wrap: wrap; order: 3; width: 100%; }
   nav a { padding: 6px 10px; }
   .sidebar-foot { margin: 0 0 0 auto; }
   main { padding: 20px 16px 40px; }
+  h1 { font-size: 1.6rem; }
 }
 
 /* Page header */
@@ -150,88 +203,98 @@ main {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
-h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.01em; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* Cards */
+/* Cards: surface, hairline border, radius 16 */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  box-shadow: var(--shadow);
+  padding: 20px 24px;
 }
 .empty { color: var(--muted); margin: 8px 0; }
 .hint { display: block; color: var(--muted); font-size: 0.85rem; margin: 12px 0 0; }
 a.hint { color: var(--accent); }
 
-/* Buttons & inputs */
-button {
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 7px 14px;
+/* Buttons: Outfit Bold uppercase, radius 8.
+   Primary = solid accent · default = transparent with hairline border · .ghost = no border. */
+button, a.button, label.button {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  padding: 9px 16px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: transparent;
   color: var(--text);
   cursor: pointer;
 }
-button:hover { background: var(--surface-2); }
-a.button {
-  display: inline-block;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 7px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-a.button:hover { text-decoration: none; }
-a.button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-a.button.primary:hover { filter: brightness(1.08); }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-button.primary:hover { filter: brightness(1.08); }
+button:hover, label.button:hover, a.button:hover { background: var(--surface-2); text-decoration: none; }
+label.button:focus-within { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+button.primary, a.button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.primary:hover, a.button.primary:hover { background: var(--accent); filter: brightness(1.08); }
 button.ghost { border-color: transparent; background: transparent; }
 button.ghost:hover { background: var(--surface-2); }
 button.danger { color: var(--danger); }
-button.small { padding: 4px 10px; font-size: 0.85rem; }
-button.icon { border: none; background: none; padding: 4px 8px; color: var(--muted); }
+button.small, .button.small { padding: 6px 12px; font-size: 12px; }
+button.icon {
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  text-transform: none;
+  font-weight: 400;
+}
 
+/* Fields: raised surface, hairline border, radius 8, padding 12 */
 input, select, textarea {
   font: inherit;
-  font-size: 0.9rem;
-  padding: 8px 10px;
+  font-size: 14px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text);
   width: 100%;
 }
-input:focus, select:focus, textarea:focus, button:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
   outline-offset: 1px;
 }
 textarea { resize: vertical; }
-.search { width: 220px; }
+input[type='checkbox'] {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  margin: 0.15rem 0 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+.search { width: 240px; }
 
 .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.toggle button { border: none; border-radius: 0; padding: 7px 12px; }
-.toggle button.active { background: var(--surface-2); color: var(--accent); }
+.toggle button { border: none; border-radius: 0; padding: 8px 12px; }
+.toggle button.active { background: var(--accent-tint); color: var(--accent); }
 
-/* Forms */
+/* Forms. Field labels: Geist 12px muted, 8px above the field. */
 .form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 14px;
+  gap: 14px 16px;
 }
 .form label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  gap: 8px;
+  font-size: 12px;
   color: var(--muted);
 }
 .form .full, .form footer { grid-column: 1 / -1; }
@@ -239,12 +302,29 @@ textarea { resize: vertical; }
 .spacer { flex: 1; }
 @media (max-width: 520px) { .form { grid-template-columns: 1fr; } }
 
+/* Form container (login, client feedback): surface, radius 20, 1px red 20% border */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-xl);
+}
+
 /* Tables */
 .table-wrap { padding: 0; overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
 tbody tr:last-child td { border-bottom: none; }
+/* Red is reserved for emphasis, so links inside data rows stay white until hovered. */
+td a { color: var(--text); }
+td a:hover { color: var(--accent); text-decoration: none; }
 tr.clickable { cursor: pointer; }
 tr.clickable:hover td { background: var(--surface-2); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -263,13 +343,13 @@ tr.clickable:hover td { background: var(--surface-2); }
   padding: 10px 6px;
   cursor: pointer;
   border-radius: var(--radius);
-  font-size: 0.9rem;
+  font-size: 14px;
 }
 .row-btn:hover { background: var(--surface-2); }
 .row-btn:focus-visible { outline: 2px solid var(--accent); }
 .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .grow small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-td.overdue { color: var(--danger); font-weight: 600; }
+td.overdue { color: var(--danger); font-weight: 500; }
 
 /* App states */
 .splash {
@@ -284,12 +364,13 @@ td.overdue { color: var(--danger); font-weight: 600; }
   left: 50%;
   transform: translateX(-50%);
   max-width: calc(100vw - 32px);
-  background: var(--text);
-  color: var(--bg);
-  padding: 10px 16px;
-  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--accent-border);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  font-size: 0.9rem;
+  font-size: 14px;
   z-index: 1000;
 }
 

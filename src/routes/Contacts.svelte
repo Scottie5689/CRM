@@ -62,7 +62,7 @@
     letter-spacing: 1px;
   }
   .stars .off {
-    color: var(--border);
+    color: var(--star-off);
   }
   .muted {
     color: var(--muted);

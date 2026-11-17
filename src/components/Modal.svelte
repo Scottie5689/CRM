@@ -24,19 +24,19 @@
 
 <style>
   dialog {
-    border: none;
+    border: 1px solid var(--border);
     padding: 0;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     background: var(--surface);
     color: var(--text);
     width: min(560px, calc(100vw - 32px));
     box-shadow: var(--shadow-lg);
   }
   dialog::backdrop {
-    background: rgb(15 23 42 / 0.45);
+    background: rgb(14 9 22 / 0.75);
   }
   .modal {
-    padding: 20px 24px 24px;
+    padding: 24px 28px 28px;
   }
   header {
     display: flex;
@@ -46,6 +46,6 @@
   }
   h2 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 20px;
   }
 </style>

@@ -44,12 +44,15 @@
 {:else}
 <div class="layout">
   <aside class="sidebar">
-    <a class="brand" href="#/"><span>CRM</span></a>
+    <a class="brand" href="#/" aria-label="ScottV.tech CRM, dashboard">
+      <span class="wordmark">ScottV<span class="tld">.tech</span></span>
+      <span class="badge-hero">CRM</span>
+    </a>
     <nav>
       {#each nav as item (item.id)}
         <a href="#/{item.id}" class:active={section === item.id} aria-current={section === item.id ? 'page' : undefined}>
           <span class="icon-glyph" aria-hidden="true">{item.icon}</span>
-          {item.label}
+          <span class="nav-label">{item.label}</span>
           {#if item.id === '' && due}<span class="pill" title="Follow-ups due">{due}</span>{/if}
         </a>
       {/each}

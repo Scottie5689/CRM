@@ -9,10 +9,10 @@
 <style>
   .badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
     color: var(--c);
     background: color-mix(in srgb, var(--c) 14%, transparent);
     white-space: nowrap;

@@ -23,14 +23,25 @@
 </script>
 
 <div class="wrap">
-  <form class="card" onsubmit={submit}>
-    <div class="brand"><span>CRM</span></div>
+  <form class="form-card" onsubmit={submit}>
+    <div class="brand-row">
+      <span class="wordmark">ScottV<span class="tld">.tech</span></span>
+      <span class="badge-hero">CRM</span>
+    </div>
     <h1>Sign in</h1>
     {#if error}<p class="error" role="alert">{error}</p>{/if}
     <label>
-      Email
+      Username
       <!-- svelte-ignore a11y_autofocus -->
-      <input type="email" autocomplete="username" required autofocus bind:value={email} />
+      <input
+        type="text"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        required
+        autofocus
+        bind:value={email}
+      />
     </label>
     <label>
       Password
@@ -53,31 +64,32 @@
     width: min(380px, 100%);
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 28px;
+    gap: 16px;
+    padding: 32px;
   }
-  .brand {
-    font-weight: 800;
-    font-size: 1.1rem;
-  }
-  .brand span {
-    color: var(--accent);
-    margin-left: 2px;
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
   }
   h1 {
-    font-size: 1.3rem;
+    font-size: 20px;
+    font-weight: 700;
   }
   label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    gap: 8px;
+    font-size: 12px;
     color: var(--muted);
   }
+  /* Full-width form submit: Outfit Bold 16px */
   button {
     margin-top: 4px;
-    padding: 9px 14px;
+    padding: 14px 16px;
+    font-size: 16px;
   }
   button:disabled {
     opacity: 0.6;

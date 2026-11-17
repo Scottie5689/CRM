@@ -19,6 +19,11 @@
   <div class="field" class:full={wide}>
     <Rating label={def.label} max={def.max ?? 5} bind:value />
   </div>
+{:else if def.type === 'boolean'}
+  <label class="check" class:full={def.full}>
+    <input type="checkbox" bind:checked={value} />
+    <span>{def.label}</span>
+  </label>
 {:else}
   <label class="field" class:full={wide}>
     <span>{def.label}{#if def.required}<span class="req" aria-hidden="true"> *</span>{/if}</span>
@@ -52,11 +57,17 @@
   .field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    gap: 8px;
+    font-size: 12px;
     color: var(--muted);
     min-width: 0;
+  }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    cursor: pointer;
   }
   .full {
     grid-column: 1 / -1;

@@ -16,6 +16,8 @@ function clean(f, v, userId) {
       const n = Math.round(Number(v));
       return n >= 1 && n <= (f.max ?? 5) ? n : null;
     }
+    case 'boolean':
+      return v === true || v === 1 || v === 'true' ? 1 : 0;
     case 'number':
       return Math.max(f.min ?? -Infinity, Number(v) || 0);
     case 'date':
@@ -43,10 +45,16 @@ function toRow(collection, record, userId) {
 
 const EMPTY = { number: 0, rating: 0 };
 
+const headshotStmt = db.prepare('SELECT updated_at FROM headshots WHERE contact_id = ?');
+
 function fromRow(collection, row) {
   const out = { id: row.id, createdAt: row.created_at };
   if (row.updated_at) out.updatedAt = row.updated_at;
-  for (const f of SCHEMA[collection]) out[f.key] = row[f.column] ?? EMPTY[f.type] ?? '';
+  for (const f of SCHEMA[collection]) {
+    out[f.key] = f.type === 'boolean' ? !!row[f.column] : (row[f.column] ?? EMPTY[f.type] ?? '');
+  }
+  // Read-only: set by uploading a photo, never by saving the record.
+  if (collection === 'contacts') out.headshotAt = headshotStmt.get(row.id)?.updated_at ?? '';
   return out;
 }
 
@@ -82,7 +90,17 @@ export function upsert(collection, id, record, userId) {
 }
 
 export function remove(collection, id, userId) {
-  return db.prepare(`DELETE FROM ${collection} WHERE id = ? AND user_id = ?`).run(id, userId).changes > 0;
+  const removed = db.prepare(`DELETE FROM ${collection} WHERE id = ? AND user_id = ?`).run(id, userId).changes > 0;
+  if (removed && collection === 'contacts') pruneHeadshots(userId);
+  return removed;
+}
+
+/** Delete photos whose contact no longer exists. */
+export function pruneHeadshots(userId) {
+  db.prepare(
+    `DELETE FROM headshots WHERE user_id = ?
+     AND contact_id NOT IN (SELECT id FROM contacts WHERE user_id = ?)`
+  ).run(userId, userId);
 }
 
 /** Replace all of a user's data (used for backup import / reset / sample data). */
@@ -99,6 +117,8 @@ export function replaceAll(userId, data) {
         if (!upsert(c, id, record, userId)) throw new ValidationError(`Record ${id} conflicts with existing data`);
       }
     }
+    // Photos of contacts that are in the backup are kept; the rest are removed.
+    pruneHeadshots(userId);
   });
   return listAll(userId);
 }

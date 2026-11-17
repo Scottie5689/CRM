@@ -4,10 +4,11 @@
 // server adds the database column automatically, validates the value, and
 // (for contacts) the field appears on the contact page in its `section`.
 //
-// Field types: text | textarea | email | tel | url | date | number | rating | select | ref
+// Field types: text | textarea | email | tel | url | date | number | rating | select | ref | boolean
 //   ref:    links to another record   -> { ref: 'companies' }
 //   select: one of a list of values   -> { options: [...], default }
 //   rating: whole number 1..max (empty = not rated)
+//   boolean: a checkbox, true/false (stored as 1/0)
 // Optional: required, full (span both columns), placeholder, rows, max, min, maxLength
 
 export const SCHEMA = {
@@ -31,6 +32,8 @@ export const SCHEMA = {
     { key: 'testimonialRating', column: 'testimonial_rating', label: 'Rating', type: 'rating', max: 5, section: 'testimonial', full: true },
     { key: 'testimonial', column: 'testimonial', label: 'Testimonial', type: 'textarea', rows: 5, section: 'testimonial',
       placeholder: 'What they said about working with you…' },
+    { key: 'consentName', column: 'consent_name', label: 'OK to show their name in marketing', type: 'boolean', section: 'testimonial' },
+    { key: 'consentCompany', column: 'consent_company', label: 'OK to show their company in marketing', type: 'boolean', section: 'testimonial' },
 
     { key: 'notes', column: 'notes', label: 'Notes', type: 'textarea', rows: 5, section: 'notes' }
   ],
@@ -55,7 +58,7 @@ export const CONTACT_SECTIONS = [
   { id: 'notes', title: 'Notes' }
 ];
 
-const EMPTY = { number: 0, rating: 0 };
+const EMPTY = { number: 0, rating: 0, boolean: false };
 
 /** A blank record for a collection, with every field present. */
 export function blank(collection) {
