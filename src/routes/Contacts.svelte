@@ -5,9 +5,12 @@
 
   let q = $state('');
 
+  const createdDate = (iso) =>
+    new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
   let rows = $derived(
     db.contacts
-      .filter((c) => matches(q, fullName(c), c.email, c.phone, c.role, c.testimonial, companyById(c.companyId)?.name))
+      .filter((c) => matches(q, fullName(c), c.email, c.phone, c.role, c.source, c.testimonial, companyById(c.companyId)?.name))
       .sort((a, b) => fullName(a).localeCompare(fullName(b)))
   );
 </script>
@@ -26,7 +29,7 @@
   {:else}
     <table>
       <thead>
-        <tr><th>Name</th><th>Company</th><th>Role</th><th>Email</th><th>Phone</th><th>Testimonial</th></tr>
+        <tr><th>Name</th><th>Company</th><th>Role</th><th>Email</th><th>Phone</th><th>Source</th><th>Testimonial</th><th>Created</th></tr>
       </thead>
       <tbody>
         {#each rows as c (c.id)}
@@ -37,6 +40,7 @@
             <td>{c.role}</td>
             <td>{#if c.email}<a href="mailto:{c.email}" onclick={(e) => e.stopPropagation()}>{c.email}</a>{/if}</td>
             <td>{#if c.phone}<a href="tel:{c.phone}" onclick={(e) => e.stopPropagation()}>{c.phone}</a>{/if}</td>
+            <td>{c.source}</td>
             <td>
               {#if c.testimonialRating}
                 <span class="stars" title="{c.testimonialRating} out of 5" aria-label="{c.testimonialRating} out of 5 stars">{'★'.repeat(c.testimonialRating)}<span class="off">{'★'.repeat(5 - c.testimonialRating)}</span></span>
@@ -44,6 +48,7 @@
                 <span class="muted">Not rated</span>
               {/if}
             </td>
+            <td class="muted">{#if c.createdAt}<time datetime={c.createdAt}>{createdDate(c.createdAt)}</time>{/if}</td>
           </tr>
         {/each}
       </tbody>

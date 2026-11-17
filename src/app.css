@@ -112,7 +112,17 @@ main {
   min-width: 0;
   max-width: 1400px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
+.site-foot {
+  margin-top: auto;
+  padding-top: 32px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.site-foot a { color: inherit; }
 
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; }

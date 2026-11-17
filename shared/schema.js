@@ -25,6 +25,8 @@ export const SCHEMA = {
     { key: 'phone', column: 'phone', label: 'Phone', type: 'tel', section: 'details' },
     { key: 'role', column: 'role', label: 'Role', type: 'text', section: 'details' },
     { key: 'companyId', column: 'company_id', label: 'Company', type: 'ref', ref: 'companies', section: 'details' },
+    { key: 'source', column: 'source', label: 'Source', type: 'select', section: 'details',
+      options: ['Referral', 'LinkedIn', 'Networking Event', 'Upwork', 'Website', 'Other'] },
 
     { key: 'testimonialRating', column: 'testimonial_rating', label: 'Rating', type: 'rating', max: 5, section: 'testimonial', full: true },
     { key: 'testimonial', column: 'testimonial', label: 'Testimonial', type: 'textarea', rows: 5, section: 'testimonial',

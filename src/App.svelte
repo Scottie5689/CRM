@@ -13,6 +13,7 @@
   import Contacts from './routes/Contacts.svelte';
   import ContactDetail from './routes/ContactDetail.svelte';
   import DataTools from './components/DataTools.svelte';
+  import Footer from './components/Footer.svelte';
 
   // The public testimonial form doesn't need a session.
   const isPublic = router.parts[0] === 't';
@@ -72,6 +73,7 @@
         <Dashboard />
       {/if}
     {/key}
+    <Footer />
   </main>
 </div>
 {/if}

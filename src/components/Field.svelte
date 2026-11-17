@@ -31,6 +31,7 @@
       </select>
     {:else if def.type === 'select'}
       <select bind:value>
+        {#if def.default === undefined}<option value="">— None —</option>{/if}
         {#each def.options as o (o)}<option value={o}>{o}</option>{/each}
       </select>
     {:else if def.type === 'number'}

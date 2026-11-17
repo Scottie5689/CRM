@@ -1,5 +1,6 @@
 <script>
   import { login } from '../lib/auth.svelte.js';
+  import Footer from '../components/Footer.svelte';
 
   let email = $state('');
   let password = $state('');
@@ -37,12 +38,14 @@
     </label>
     <button class="primary" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
   </form>
+  <Footer />
 </div>
 
 <style>
   .wrap {
     min-height: 100vh;
     display: grid;
+    grid-template-rows: 1fr auto;
     place-items: center;
     padding: 16px;
   }

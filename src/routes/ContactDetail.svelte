@@ -221,7 +221,7 @@
 
         {#if form.createdAt}
           <p class="meta">
-            Added {new Date(form.createdAt).toLocaleDateString()}
+            Created {new Date(form.createdAt).toLocaleDateString()}
             {#if form.updatedAt} · updated {new Date(form.updatedAt).toLocaleDateString()}{/if}
           </p>
         {/if}

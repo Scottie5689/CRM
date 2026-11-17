@@ -2,6 +2,7 @@
   // Public page a client lands on from the testimonial email. No login.
   import { api } from '../lib/api.js';
   import Rating from '../components/Rating.svelte';
+  import Footer from '../components/Footer.svelte';
 
   let { token } = $props();
 
@@ -89,6 +90,7 @@
       </form>
     {/if}
   </div>
+  <Footer />
 </div>
 
 <style>
@@ -96,6 +98,7 @@
     min-height: 100vh;
     display: grid;
     grid-template-columns: minmax(0, 560px);
+    grid-template-rows: 1fr auto;
     justify-content: center;
     align-items: center;
     padding: 24px 16px;
