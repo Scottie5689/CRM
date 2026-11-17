@@ -109,6 +109,13 @@ db.exec(`
 const userCols = new Set(db.prepare('PRAGMA table_info(users)').all().map((c) => c.name));
 if (!userCols.has('display_name')) db.exec('ALTER TABLE users ADD COLUMN display_name TEXT');
 
+// When marketing consent was given (ISO timestamp, NULL while not consented).
+// Set by the server only (see consentStamps in records.js), so not in shared/schema.js.
+const contactCols = new Set(db.prepare('PRAGMA table_info(contacts)').all().map((c) => c.name));
+for (const col of ['consent_name_at', 'consent_company_at']) {
+  if (!contactCols.has(col)) db.exec(`ALTER TABLE contacts ADD COLUMN ${col} TEXT`);
+}
+
 // Add any columns defined in shared/schema.js that the database doesn't have yet.
 const SQL_TYPE = { rating: 'INTEGER', number: 'REAL', boolean: 'INTEGER' };
 for (const [table, fields] of Object.entries(SCHEMA)) {

@@ -9,15 +9,15 @@
 
   const greeting = (name) => `Hi ${contact.firstName},
 
-Thank you so much for working with me. It's been a real pleasure, and I hope you're happy with how everything turned out.
+It's been a pleasure working with you, and I hope you're happy with how everything turned out.
 
-I'm gathering a few short testimonials from clients and would be grateful if you'd share a sentence or two about your experience, along with a quick 1–5 star rating. It only takes a minute.
+I'm gathering testimonials from select clients and would be grateful if you'd share a sentence or two about your experience, along with a quick 1-5 star rating. It only takes a minute.
 
 Thanks again,
 ${name}`.trimEnd();
 
   let senderName = $state(auth.user?.displayName ?? '');
-  let subject = $state(`Would you share a few words about our work together?`);
+  let subject = $state(`A testimonial request from Scott V`);
   let message = $state(greeting(auth.user?.displayName ?? ''));
   let edited = $state(false);
 
@@ -70,7 +70,7 @@ ${name}`.trimEnd();
   {#if result}
     <div class="done">
       {#if result.delivered}
-        <p class="ok">✓ Email sent to <strong>{result.to}</strong>.</p>
+        <p class="ok">Email sent to <strong>{result.to}</strong>.</p>
         <p class="muted">When they submit the form, the rating and testimonial are saved to this contact and you'll get an email.</p>
       {:else}
         <p class="warn">Email sending isn't set up yet, so nothing was sent.</p>
@@ -81,7 +81,7 @@ ${name}`.trimEnd();
       {/if}
       <div class="link-row">
         <input readonly value={result.link} onfocus={(e) => e.currentTarget.select()} aria-label="Testimonial link" />
-        <button type="button" onclick={copy}>{copied ? 'Copied ✓' : 'Copy link'}</button>
+        <button type="button" onclick={copy}>{copied ? 'Copied' : 'Copy link'}</button>
       </div>
       <footer>
         <span class="spacer"></span>

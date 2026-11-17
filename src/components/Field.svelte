@@ -3,7 +3,11 @@
   import Rating from './Rating.svelte';
   import { db } from '../lib/db.svelte.js';
 
-  let { def, value = $bindable() } = $props();
+  // stamp: ISO timestamp from the server for fields with def.stamp (e.g. when consent was given)
+  let { def, value = $bindable(), stamp = '' } = $props();
+
+  const stampText = (iso) =>
+    new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
   let refOptions = $derived(
     def.type === 'ref'
@@ -22,7 +26,12 @@
 {:else if def.type === 'boolean'}
   <label class="check" class:full={def.full}>
     <input type="checkbox" bind:checked={value} />
-    <span>{def.label}</span>
+    <span>
+      {def.label}
+      {#if def.stamp && value && stamp}
+        <small class="stamp">Given <time datetime={stamp}>{stampText(stamp)}</time></small>
+      {/if}
+    </span>
   </label>
 {:else}
   <label class="field" class:full={wide}>
@@ -58,8 +67,9 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--label);
     min-width: 0;
   }
   .check {
@@ -74,5 +84,11 @@
   }
   .req {
     color: var(--danger);
+  }
+  .stamp {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
   }
 </style>

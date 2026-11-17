@@ -43,6 +43,26 @@ function toRow(collection, record, userId) {
   return row;
 }
 
+// Consent checkboxes and the column holding when each was given.
+export const CONSENT_STAMPS = [
+  { column: 'consent_name', at: 'consent_name_at', key: 'consentNameAt' },
+  { column: 'consent_company', at: 'consent_company_at', key: 'consentCompanyAt' }
+];
+
+const isTimestamp = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v) && !isNaN(Date.parse(v));
+
+/**
+ * Fill in consent dates on a contact row: kept while consent stays on, set to now
+ * when it's newly given (or taken from a backup being imported), cleared when withdrawn.
+ */
+function consentStamps(row, record, existing, now) {
+  for (const c of CONSENT_STAMPS) {
+    if (!row[c.column]) row[c.at] = null;
+    else if (existing?.[c.column]) row[c.at] = existing[c.at] ?? now;
+    else row[c.at] = isTimestamp(record[c.key]) ? new Date(record[c.key]).toISOString() : now;
+  }
+}
+
 const EMPTY = { number: 0, rating: 0 };
 
 const headshotStmt = db.prepare('SELECT updated_at FROM headshots WHERE contact_id = ?');
@@ -53,8 +73,12 @@ function fromRow(collection, row) {
   for (const f of SCHEMA[collection]) {
     out[f.key] = f.type === 'boolean' ? !!row[f.column] : (row[f.column] ?? EMPTY[f.type] ?? '');
   }
-  // Read-only: set by uploading a photo, never by saving the record.
-  if (collection === 'contacts') out.headshotAt = headshotStmt.get(row.id)?.updated_at ?? '';
+  if (collection === 'contacts') {
+    // Read-only: set by uploading a photo, never by saving the record.
+    out.headshotAt = headshotStmt.get(row.id)?.updated_at ?? '';
+    // Read-only: set by the server when consent is given.
+    for (const c of CONSENT_STAMPS) out[c.key] = row[c.at] ?? '';
+  }
   return out;
 }
 
@@ -72,8 +96,12 @@ export function listAll(userId) {
 /** Insert or update. Returns the saved record, or null if the id belongs to someone else. */
 export function upsert(collection, id, record, userId) {
   const row = toRow(collection, record, userId);
-  const cols = Object.keys(row);
   const now = new Date().toISOString();
+  if (collection === 'contacts') {
+    const existing = db.prepare('SELECT * FROM contacts WHERE id = ? AND user_id = ?').get(id, userId);
+    consentStamps(row, record, existing, now);
+  }
+  const cols = Object.keys(row);
   const createdAt = typeof record.createdAt === 'string' ? record.createdAt : now;
 
   const result = db

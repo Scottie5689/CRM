@@ -165,9 +165,10 @@ export async function submit(token, { rating, testimonial, consentName, consentC
       .run(now, r.token_hash);
     if (used.changes === 0) throw Object.assign(new Error('used'), { used: true });
     db.prepare(
-      `UPDATE contacts SET testimonial = ?, testimonial_rating = ?, consent_name = ?, consent_company = ?, updated_at = ?
+      `UPDATE contacts SET testimonial = ?, testimonial_rating = ?, consent_name = ?, consent_company = ?,
+         consent_name_at = ?, consent_company_at = ?, updated_at = ?
        WHERE id = ? AND user_id = ?`
-    ).run(text, n, showName, showCompany, now, r.contact_id, r.user_id);
+    ).run(text, n, showName, showCompany, showName ? now : null, showCompany ? now : null, now, r.contact_id, r.user_id);
     if (photo) saveHeadshot(r.contact_id, r.user_id, photo);
     logActivity(
       r.user_id,
@@ -185,7 +186,7 @@ export async function submit(token, { rating, testimonial, consentName, consentC
   // Let the account owner know (best effort).
   sendMail({
     to: r.user_email,
-    subject: `New testimonial from ${r.first_name}: ${'★'.repeat(n)}${'☆'.repeat(5 - n)}`,
+    subject: `New ${n}-star testimonial from ${r.first_name}`,
     text: `${r.first_name} left you a ${n}-star testimonial:\n\n"${text}"\n\n${permissions}\n\nIt has been saved to their contact in your CRM.`,
     html: `<p>${esc(r.first_name)} left you a <b>${n}-star</b> testimonial:</p><blockquote style="border-left:3px solid #ff3b30;margin:0;padding:4px 12px">${esc(text).replace(/\n/g, '<br>')}</blockquote><p style="color:#6b7280;font-size:14px">${permissions}</p><p>It has been saved to their contact in your CRM.</p>`,
     fromName: 'CRM'

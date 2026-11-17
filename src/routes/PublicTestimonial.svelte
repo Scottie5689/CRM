@@ -3,6 +3,7 @@
   import { api } from '../lib/api.js';
   import Rating from '../components/Rating.svelte';
   import Footer from '../components/Footer.svelte';
+  import Fireworks from '../components/Fireworks.svelte';
   import { toJpegDataUrl } from '../lib/image.js';
 
   let { token } = $props();
@@ -68,84 +69,88 @@
 <svelte:head><title>Share your feedback</title></svelte:head>
 
 <div class="wrap">
-  <div class="form-card panel">
-    <div class="wordmark page-brand">ScottV<span class="tld">.tech</span></div>
-    {#if loadError}
-      <h1>Something went wrong</h1>
-      <p class="lead">{loadError}</p>
-    {:else if !view}
-      <p class="lead">Loading…</p>
-    {:else if done}
-      <div class="big" aria-hidden="true">🎉</div>
-      <h1>Thank you, <span class="hl">{view.firstName}</span>!</h1>
-      <p class="lead">Your feedback has been sent to {view.senderName}. It really means a lot.</p>
-      <p class="muted">You can close this page now.</p>
-    {:else if view.state === 'submitted'}
-      <h1>Already received</h1>
-      <p class="lead">Thanks, {view.firstName}! Your feedback has already been submitted.</p>
-    {:else if view.state === 'expired'}
-      <h1>This link has expired</h1>
-      <p class="lead">Please reply to {view.senderName}'s email if you'd still like to leave feedback.</p>
-    {:else if view.state !== 'open'}
-      <h1>Link not valid</h1>
-      <p class="lead">This feedback link isn't valid any more. It may have been replaced by a newer one.</p>
-    {:else}
-      <form onsubmit={submit}>
-        <h1>Hi <span class="hl">{view.firstName}</span> 👋</h1>
-        <p class="lead">
-          {view.senderName} would love to hear how it went working together. It only takes a minute.
-        </p>
-
-        <div class="block">
-          <Rating label="How would you rate the experience?" size="2.4rem" bind:value={rating} />
-          <p class="rating-label" aria-live="polite">{labels[rating] ?? ''}</p>
-        </div>
-
-        <label class="block">
-          <span class="label">A few words about working with {view.senderName}</span>
-          <textarea
-            rows="6"
-            maxlength="5000"
-            bind:value={testimonial}
-            placeholder="What was the project? How did it go? Would you recommend {view.senderName}?"
-          ></textarea>
-        </label>
-
-        <fieldset class="block">
-          <legend class="label">Can {view.senderName} share this in their marketing?</legend>
-          <label class="check">
-            <input type="checkbox" bind:checked={consentName} />
-            <span>Yes, show my name with my testimonial</span>
-          </label>
-          <label class="check">
-            <input type="checkbox" bind:checked={consentCompany} />
-            <span>Yes, show my company name</span>
-          </label>
-          <p class="muted hint">Leave these unticked to stay anonymous.</p>
-        </fieldset>
-
-        <div class="block">
-          <span class="label">Your photo (optional)</span>
-          {#if photo}
-            <div class="photo">
-              <img src={photo} alt="Your chosen headshot" />
-              <button type="button" class="ghost" onclick={() => (photo = '')}>Remove photo</button>
-            </div>
-          {:else}
-            <label class="button">
-              {photoBusy ? 'Preparing…' : 'Choose a photo'}
-              <input type="file" accept="image/*" class="sr-only" disabled={photoBusy} onchange={pickPhoto} />
-            </label>
-          {/if}
-          <p class="muted hint">A headshot to show alongside your testimonial.</p>
-        </div>
-
-        {#if error}<p class="error" role="alert">{error}</p>{/if}
-
-        <button class="primary submit" type="submit" disabled={busy || photoBusy}>{busy ? 'Sending…' : 'Send feedback'}</button>
-        <p class="muted fine">Your feedback goes only to {view.senderName}, who will use it as you've chosen above.</p>
-      </form>
+  <div class="stage">
+    {#if done}
+      <div class="show"><Fireworks color="#ff3b30" /></div>
     {/if}
+    <div class="form-card panel">
+      <div class="wordmark page-brand">ScottV<span class="tld">.tech</span></div>
+      {#if loadError}
+        <h1>Something went wrong</h1>
+        <p class="lead">{loadError}</p>
+      {:else if !view}
+        <p class="lead">Loading…</p>
+      {:else if done}
+        <h1>Thank you, <span class="hl">{view.firstName}</span>!</h1>
+        <p class="lead">Your feedback helps small businesses like mine and is greatly appreciatted.</p>
+        <p class="muted">You can close this page now.</p>
+      {:else if view.state === 'submitted'}
+        <h1>Already received</h1>
+        <p class="lead">Thanks, {view.firstName}! Your feedback has already been submitted.</p>
+      {:else if view.state === 'expired'}
+        <h1>This link has expired</h1>
+        <p class="lead">Please reply to {view.senderName}'s email if you'd still like to leave feedback.</p>
+      {:else if view.state !== 'open'}
+        <h1>Link not valid</h1>
+        <p class="lead">This feedback link isn't valid any more. It may have been replaced by a newer one.</p>
+      {:else}
+        <form onsubmit={submit}>
+          <h1>Hi <span class="hl">{view.firstName}</span></h1>
+          <p class="lead">
+            Thanks for working with me. If you have a moment, I'd really value your testimonial. A sentence or two I could share with others is plenty.
+          </p>
+
+          <div class="block">
+            <Rating label="How would you rate the experience?" size="2.4rem" bind:value={rating} />
+            <p class="rating-label" aria-live="polite">{labels[rating] ?? ''}</p>
+          </div>
+
+          <label class="block">
+            <span class="label">A few words about working with {view.senderName}</span>
+            <textarea
+              rows="6"
+              maxlength="5000"
+              bind:value={testimonial}
+              placeholder="What was the project? How did it go? Would you recommend {view.senderName}?"
+            ></textarea>
+          </label>
+
+          <fieldset class="block">
+            <legend class="label">Can {view.senderName} share this in their marketing?</legend>
+            <label class="check">
+              <input type="checkbox" bind:checked={consentName} />
+              <span>Yes, show my name with my testimonial</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" bind:checked={consentCompany} />
+              <span>Yes, show my company name</span>
+            </label>
+            <p class="muted hint">Leave these unticked to stay anonymous.</p>
+          </fieldset>
+
+          <div class="block">
+            <span class="label">Your photo (optional)</span>
+            {#if photo}
+              <div class="photo">
+                <img src={photo} alt="Your chosen headshot" />
+                <button type="button" class="ghost" onclick={() => (photo = '')}>Remove photo</button>
+              </div>
+            {:else}
+              <label class="button">
+                {photoBusy ? 'Preparing…' : 'Choose a photo'}
+                <input type="file" accept="image/*" class="sr-only" disabled={photoBusy} onchange={pickPhoto} />
+              </label>
+            {/if}
+            <p class="muted hint">A headshot to show alongside your testimonial.</p>
+          </div>
+
+          {#if error}<p class="error" role="alert">{error}</p>{/if}
+
+          <button class="primary submit" type="submit" disabled={busy || photoBusy}>{busy ? 'Sending…' : 'Send feedback'}</button>
+          <p class="muted fine">Your feedback goes only to {view.senderName}, who will use it as you've chosen above.</p>
+        </form>
+      {/if}
+    </div>
   </div>
   <Footer />
 </div>
@@ -160,7 +165,22 @@
     align-items: center;
     padding: 24px 16px;
   }
+  .stage {
+    position: relative;
+    width: 100%;
+  }
+  /* Fireworks float above the card (out of the layout, so the card stays centred)
+     and tuck 28px behind its top edge; the card paints over them. */
+  .show {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% - 28px);
+    pointer-events: none;
+  }
   .panel {
+    position: relative;
+    z-index: 1;
     width: 100%;
     padding: 32px;
   }
@@ -195,8 +215,9 @@
   }
   .label {
     display: block;
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--label);
     margin-bottom: 8px;
   }
   textarea {
@@ -263,8 +284,5 @@
     object-fit: cover;
     border-radius: 50%;
     border: 1px solid var(--border);
-  }
-  .big {
-    font-size: 2.5rem;
   }
 </style>

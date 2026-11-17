@@ -82,8 +82,9 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--label);
   }
   /* Full-width form submit: Outfit Bold 16px */
   button {

@@ -13,6 +13,7 @@
   --border: rgb(255 255 255 / 0.06); /* Hairline border */
   --text: #ffffff; /* Text primary */
   --muted: #9b8fa9; /* Text muted */
+  --label: #d9d0e5; /* Form labels: ~12:1 on surface, brighter than muted */
   --accent: #ff3b30; /* CTAs, active nav, labels, highlights */
   --accent-tint: rgb(255 59 48 / 0.12); /* Tag, eyebrow, badge & icon backgrounds */
   --accent-border: rgb(255 59 48 / 0.2); /* Form container border */
@@ -284,7 +285,7 @@ input[type='checkbox'] {
 .toggle button { border: none; border-radius: 0; padding: 8px 12px; }
 .toggle button.active { background: var(--accent-tint); color: var(--accent); }
 
-/* Forms. Field labels: Geist 12px muted, 8px above the field. */
+/* Forms. Field labels: Geist 14px medium, --label colour, 8px above the field. */
 .form {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -294,8 +295,9 @@ input[type='checkbox'] {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--label);
 }
 .form .full, .form footer { grid-column: 1 / -1; }
 .form footer { display: flex; gap: 8px; margin-top: 8px; }

@@ -9,6 +9,7 @@
 //   select: one of a list of values   -> { options: [...], default }
 //   rating: whole number 1..max (empty = not rated)
 //   boolean: a checkbox, true/false (stored as 1/0)
+//            stamp: key of a read-only date the server keeps for it (e.g. when consent was given)
 // Optional: required, full (span both columns), placeholder, rows, max, min, maxLength
 
 export const SCHEMA = {
@@ -32,8 +33,8 @@ export const SCHEMA = {
     { key: 'testimonialRating', column: 'testimonial_rating', label: 'Rating', type: 'rating', max: 5, section: 'testimonial', full: true },
     { key: 'testimonial', column: 'testimonial', label: 'Testimonial', type: 'textarea', rows: 5, section: 'testimonial',
       placeholder: 'What they said about working with you…' },
-    { key: 'consentName', column: 'consent_name', label: 'OK to show their name in marketing', type: 'boolean', section: 'testimonial' },
-    { key: 'consentCompany', column: 'consent_company', label: 'OK to show their company in marketing', type: 'boolean', section: 'testimonial' },
+    { key: 'consentName', column: 'consent_name', label: 'OK to show their name in marketing', type: 'boolean', section: 'testimonial', stamp: 'consentNameAt' },
+    { key: 'consentCompany', column: 'consent_company', label: 'OK to show their company in marketing', type: 'boolean', section: 'testimonial', stamp: 'consentCompanyAt' },
 
     { key: 'notes', column: 'notes', label: 'Notes', type: 'textarea', rows: 5, section: 'notes' }
   ],

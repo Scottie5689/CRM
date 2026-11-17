@@ -38,9 +38,9 @@
   legend {
     padding: 0;
     margin-bottom: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--label);
   }
   .row {
     display: flex;

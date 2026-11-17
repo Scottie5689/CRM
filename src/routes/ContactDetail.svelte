@@ -200,7 +200,7 @@
                     title={requestBlocked || `Email ${form.firstName} a link to leave a rating and testimonial`}
                     onclick={() => (requesting = true)}
                   >
-                    ✉ {request && !request.submittedAt ? 'Request again' : 'Request testimonial'}
+                    {request && !request.submittedAt ? 'Request again' : 'Request testimonial'}
                   </button>
                 </div>
                 {#if requestStatus || requestBlocked}
@@ -211,7 +211,7 @@
               {/if}
               <div class="fields">
                 {#each s.fields as f (f.key)}
-                  <Field def={f} bind:value={form[f.key]} />
+                  <Field def={f} bind:value={form[f.key]} stamp={f.stamp ? form[f.stamp] : ''} />
                 {/each}
               </div>
               {#if s.id === 'testimonial'}
