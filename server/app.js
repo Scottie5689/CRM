@@ -8,6 +8,7 @@ import { TABLES, ValidationError, listAll, upsert, remove, replaceAll } from './
 import { LIMITS, createRequest, latestRequest, publicView, submit } from './testimonials.js';
 import { mailConfigured } from './mailer.js';
 import { parseImage, saveHeadshot, getHeadshot, deleteHeadshot } from './headshots.js';
+import { integrationEnabled, validKey, websiteUser, recordSubmission, listTestimonials, testimonialPhoto } from './integration.js';
 
 export const app = express();
 app.set('trust proxy', 'loopback');
@@ -93,6 +94,36 @@ api.post('/public/testimonials/:token', async (req, res) => {
   if (result.error) return res.status(result.status).json({ error: result.error });
   res.json({ ok: true });
 });
+
+// --- Website connection (server-to-server; the shared API key is the credential) ---
+const website = express.Router();
+
+website.use((req, res, next) => {
+  if (!integrationEnabled()) return res.status(404).json({ error: 'Not found' });
+  if (rateLimited(`web:${req.ip}`, 600)) return res.status(429).json({ error: 'Too many requests. Try again later.' });
+  if (!validKey(req.get('authorization'))) return res.status(401).json({ error: 'Invalid API key' });
+  const user = websiteUser();
+  if (!user) {
+    console.error('Website connection: WEBSITE_USER is not set to the email of an existing user.');
+    return res.status(503).json({ error: 'The CRM is not set up to receive website data' });
+  }
+  req.user = user;
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+website.post('/contacts', (req, res) => res.json(recordSubmission(req.user.id, req.body ?? {})));
+
+website.get('/testimonials', (req, res) => res.json({ testimonials: listTestimonials(req.user.id) }));
+
+website.get('/testimonials/:id/photo', (req, res) => {
+  const photo = testimonialPhoto(req.user.id, req.params.id);
+  if (!photo) return res.status(404).json({ error: 'No photo' });
+  res.set({ 'Content-Type': photo.mime, 'Content-Length': photo.data.length });
+  res.end(photo.data);
+});
+
+api.use('/integrations/website', website);
 
 // --- Everything below requires a session ---
 api.use((req, res, next) => {

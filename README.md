@@ -39,6 +39,15 @@ On a contact's page, **Request testimonial** emails the contact a personal link 
 
 To send real email, copy `.env.example` to `.env` and set `SMTP_URL` and `MAIL_FROM` (any SMTP provider works), then restart. Set `APP_URL` in production so links point at your public address. Without SMTP settings, nothing is sent: emails are saved to `data/outbox/` and the app gives you the link to send yourself.
 
+## Website connection (scottv.tech)
+
+The website sends its contact and audit form submissions here, and copies testimonials from here so you can choose which to publish (in the website's `/admin`). Code: [`server/integration.js`](server/integration.js).
+
+- Set `WEBSITE_API_KEY` (32+ random characters) and `WEBSITE_USER` (the CRM user who owns website contacts) in `.env`. Use the same key as `CRM_API_KEY` on the website.
+- A submission adds a **Message** activity to the contact with the same email, or creates the contact with source **Website**.
+- The website only receives the testimonial text and rating, plus the name, role and photo if **OK to show their name** is ticked, and the company if **OK to show their company** is ticked. Unticking either removes it from the site at the next hourly sync. Clearing a testimonial removes it from the site too.
+- Without `WEBSITE_API_KEY` the connection is off and its endpoints return 404.
+
 ## Adding fields
 
 All record fields are defined in [`shared/schema.js`](shared/schema.js). To add one, add a line to the right list, e.g.
