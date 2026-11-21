@@ -46,6 +46,7 @@ The website sends its contact and audit form submissions here, and copies testim
 - Set `WEBSITE_API_KEY` (32+ random characters) and `WEBSITE_USER` (the CRM user who owns website contacts) in `.env`. Use the same key as `CRM_API_KEY` on the website.
 - A submission adds a **Message** activity to the contact with the same email, or creates the contact with source **Website**.
 - The website only receives the testimonial text and rating, plus the name, role and photo if **OK to show their name** is ticked, and the company if **OK to show their company** is ticked. Unticking either removes it from the site at the next hourly sync. Clearing a testimonial removes it from the site too.
+- When the company isn't allowed, the contact's **Source** is sent instead if it's **Upwork** or **LinkedIn**, so the site can say e.g. "Upwork Client". Other sources are never sent.
 - Without `WEBSITE_API_KEY` the connection is off and its endpoints return 404.
 
 ## Adding fields

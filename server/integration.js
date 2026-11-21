@@ -100,14 +100,18 @@ export function recordSubmission(userId, body) {
   return { contactId: contact.id, created, duplicate: false };
 }
 
+// Sources that read well on the website ("Upwork Client"). Others (Referral, Website…) aren't sent.
+const PUBLIC_SOURCES = ['Upwork', 'LinkedIn'];
+
 /**
  * Every contact with a testimonial, reduced to what may be shown publicly:
  * the name, role and photo only with name consent, the company only with company consent.
+ * Without company consent, the source is sent instead when it's a public platform like Upwork.
  */
 export function listTestimonials(userId) {
   const rows = db.prepare(
     `SELECT c.id, c.first_name, c.last_name, c.role, c.testimonial, c.testimonial_rating,
-            c.consent_name, c.consent_company, c.created_at,
+            c.consent_name, c.consent_company, c.source, c.created_at,
             co.name AS company, h.updated_at AS photo_at,
             (SELECT MAX(submitted_at) FROM testimonial_requests r WHERE r.contact_id = c.id) AS submitted_at
        FROM contacts c
@@ -126,6 +130,7 @@ export function listTestimonials(userId) {
       name: named ? [r.first_name, r.last_name].filter(Boolean).join(' ') : null,
       role: named ? r.role || null : null,
       company: r.consent_company ? r.company || null : null,
+      source: !r.consent_company && PUBLIC_SOURCES.includes(r.source) ? r.source : null,
       photoAt: named ? r.photo_at || null : null,
       givenAt: r.submitted_at || r.created_at
     };
